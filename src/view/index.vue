@@ -4,7 +4,7 @@
       Button.button(icon="md-sync") Refresh
       span &nbsp;&nbsp;
       Button.button(icon="md-add" @click="add()") Add
-      Upload(action="share/content/content/upload")
+      Upload(action="share/content/upload")
         Button(icon="ios-cloud-upload-outline") Upload files
     Row
       Col(span="12")
@@ -13,9 +13,11 @@
             span.list-title {{ headTitle }}
           ListItem(v-for="(item,index) in contentData" :key="index" :avatar="item.icon" title="" description="") {{ item.urlName }}&nbsp;&nbsp;&nbsp;&nbsp;
             template(slot="extra")
-              Button(shape="circle" icon="ios-paw" @click="goUrl(item.url)") 前往
+              Button(shape="circle" @click="goUp(item)") 置顶
               span &nbsp;&nbsp;
-              Tag(type="border" closable @on-close="remove(item)" color="volcano") 删除
+              Button(shape="circle" icon="md-paw" @click="goUrl(item.url)")
+              span &nbsp;&nbsp;
+              Button(shape="circle" icon="md-close" @click="remove(item)")
       Col(span="12") &nbsp;
     Modal(v-model="showModal", title="Add" width="800")
       Form(:label-width='80')
@@ -58,6 +60,21 @@ export default {
     },
     add () {
       this.showModal = true
+    },
+    goUp (ret) {
+      let data = this.contentData
+      let newData = ''
+      data.forEach((item, index) => {
+        if (ret.id === item.id) {
+          newData = data[index]
+        }
+      })
+      newData.weight = Number(data[0].weight) + 1
+      this.axios.post('share/content/one/weight/update', {
+        ...newData
+      }).then(() => {
+        this.loadData()
+      })
     },
     submit () {
       this.axios.post('share/content/one/add', {
