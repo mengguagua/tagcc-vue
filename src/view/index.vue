@@ -1,7 +1,7 @@
 <template lang="pug">
   div(style="padding: 48px 120px")
     div
-      Button.button(icon="md-sync") Refresh
+      Button.button(icon="md-sync" @click="loadData") Refresh
       span &nbsp;&nbsp;
       Button.button(icon="md-add" @click="add()") Add
       Upload(action="share/content/upload")
@@ -18,6 +18,7 @@
               Button(shape="circle" icon="md-paw" @click="goUrl(item.url)")
               span &nbsp;&nbsp;
               Button(shape="circle" icon="md-close" @click="remove(item)")
+        Page(:total="total" size="small" :page-size="pageSize" @on-change="changePage")
       Col(span="12") &nbsp;
     Modal(v-model="showModal", title="Add" width="800")
       Form(:label-width='80')
@@ -35,9 +36,12 @@ export default {
   data () {
     return {
       headTitle: '常用链接',
+      allData: [],
       contentData: [],
       showModal: false,
       loading: false,
+      total: 0,
+      pageSize: 20,
       formData: {
         url: '',
         urlName: ''
@@ -50,10 +54,17 @@ export default {
   methods: {
     loadData () {
       this.axios.get('share/content/query').then((resp) => {
-        this.contentData = resp
+        this.total = resp.length
+        this.allData = resp
+        this.contentData = resp.slice(0, this.pageSize)
       }).catch((response) => {
         console.log(response)
       })
+    },
+    changePage (index) {
+      let start = (index - 1) * this.pageSize
+      let end = index * this.pageSize
+      this.contentData = this.allData.slice(start, end)
     },
     goUrl (url) {
       window.open(url)
