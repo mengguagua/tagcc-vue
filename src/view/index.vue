@@ -53,7 +53,7 @@ export default {
   },
   methods: {
     loadData () {
-      this.axios.get('share/content/query').then((resp) => {
+      this.axios.get('api/share/content/query').then((resp) => {
         this.total = resp.length
         this.allData = resp
         this.contentData = resp.slice(0, this.pageSize)
