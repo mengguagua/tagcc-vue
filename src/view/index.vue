@@ -81,14 +81,14 @@ export default {
         }
       })
       newData.weight = Number(data[0].weight) + 1
-      this.axios.post('share/content/one/weight/update', {
+      this.axios.post('api/share/content/one/weight/update', {
         ...newData
       }).then(() => {
         this.loadData()
       })
     },
     submit () {
-      this.axios.post('share/content/one/add', {
+      this.axios.post('api/share/content/one/add', {
         ...this.formData
       }).then(() => {
         this.loadData()
@@ -100,7 +100,7 @@ export default {
         okText: '删除',
         content: '<h4>tip：请主人再次确认<h4/>',
         onOk: () => {
-          this.axios.post('share/content/one/delete', {
+          this.axios.post('api/share/content/one/delete', {
             id: ret.id
           }).then(() => {
             this.loadData()

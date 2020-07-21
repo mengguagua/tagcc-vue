@@ -2,6 +2,10 @@
 
 > project by gcc
 
+## Tip
+
+- idea工具，因为使用lombok工具类库，需要安装对应插件
+
 ## Build Setup
 
 ``` bash
