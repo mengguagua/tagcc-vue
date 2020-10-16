@@ -17,6 +17,15 @@ axios.defaults.transformRequest = [
 ]
 axios.defaults.responseType = 'json'
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8'
+// 添加request拦截器
+axios.interceptors.request.use(config => {
+  console.log(config)
+  let url = config.url
+  if (url.indexOf('share') === 0 || url.indexOf('base') === 0) { // share开头的接口都走api对应的服务
+    config.url = `api/${url}`
+  }
+  return config
+})
 // 添加响应拦截器
 axios.interceptors.response.use(function (response) {
   return response.data

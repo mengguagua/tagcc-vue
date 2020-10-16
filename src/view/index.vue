@@ -1,5 +1,7 @@
 <template lang="pug">
   div(style="padding: 48px 120px")
+    div.position
+      Button(@click="loginShow") 登录
     div
       Button.button(icon="md-sync" @click="loadData") Refresh
       span &nbsp;&nbsp;
@@ -28,9 +30,18 @@
           Input(v-model='formData.urlName', placeholder="描述")
       template(slot="footer")
         Button(@click="submit", :loading="loading"  type="primary" :disabled="loading") 确定
+    Modal(v-model="loginModal", title="Login" width="400")
+      Form(:label-width='80')
+        FormItem(label="用户名")
+          Input(v-model='loginData.username', placeholder="用户名")
+        FormItem(label="密码")
+          Input(v-model='loginData.password', placeholder="密码")
+      template(slot="footer")
+        Button(@click="login", :loading="loading"  type="primary" :disabled="loading") 确定
 </template>
 
 <script>
+import md5 from 'md5'
 export default {
   name: 'HelloWorld',
   data () {
@@ -39,12 +50,17 @@ export default {
       allData: [],
       contentData: [],
       showModal: false,
+      loginModal: false,
       loading: false,
       total: 0,
       pageSize: 20,
       formData: {
         url: '',
         urlName: ''
+      },
+      loginData: {
+        username: '',
+        password: ''
       }
     }
   },
@@ -53,7 +69,7 @@ export default {
   },
   methods: {
     loadData () {
-      this.axios.get('api/share/content/query').then((resp) => {
+      this.axios.get('share/content/query').then((resp) => {
         this.total = resp.length
         this.allData = resp
         this.contentData = resp.slice(0, this.pageSize)
@@ -81,17 +97,33 @@ export default {
         }
       })
       newData.weight = Number(data[0].weight) + 1
-      this.axios.post('api/share/content/one/weight/update', {
+      this.axios.post('share/content/one/weight/update', {
         ...newData
       }).then(() => {
         this.loadData()
       })
     },
+    loginShow () {
+      this.loginModal = true
+    },
+    login () {
+      this.loading = true
+      Object.assign(this.loginData, {password: md5(this.loginData.password)})
+      this.axios.post('base/login', {
+        ...this.loginData
+      }).then(() => {
+        this.loading = false
+        this.loadData()
+        this.loginModal = false
+      })
+    },
     submit () {
-      this.axios.post('api/share/content/one/add', {
+      this.loading = true
+      this.axios.post('share/content/one/add', {
         ...this.formData
       }).then(() => {
         this.loadData()
+        this.loading = false
         this.showModal = false
       })
     },
@@ -100,7 +132,7 @@ export default {
         okText: '删除',
         content: '<h4>tip：请主人再次确认<h4/>',
         onOk: () => {
-          this.axios.post('api/share/content/one/delete', {
+          this.axios.post('share/content/one/delete', {
             id: ret.id
           }).then(() => {
             this.loadData()
@@ -118,11 +150,14 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .list-title{
+  .list-title {
     font-size: 14px;
     font-weight: 500;
   }
-  .button{
+  .button {
     margin-bottom: 12px;
+  }
+  .position {
+    padding: 0px 0px 12px 0px;
   }
 </style>
