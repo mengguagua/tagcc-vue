@@ -14,11 +14,12 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "md5": "^2.2.1",
     "view-design": "^4.2.0",
     "vue": "^2.5.2",
     "vue-axios": "^2.1.5",
-    "vue-router": "^3.0.1",
-    "md5": "^2.2.1"
+    "vue-cookie": "^1.1.4",
+    "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

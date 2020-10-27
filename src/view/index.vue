@@ -73,8 +73,8 @@ export default {
         this.total = resp.length
         this.allData = resp
         this.contentData = resp.slice(0, this.pageSize)
-      }).catch((response) => {
-        console.log(response)
+      }).catch((resp) => {
+        console.log(resp)
       })
     },
     changePage (index) {
@@ -111,9 +111,10 @@ export default {
       Object.assign(this.loginData, {password: md5(this.loginData.password)})
       this.axios.post('base/login', {
         ...this.loginData
-      }).then(() => {
-        this.loading = false
+      }).then((resp) => {
+        this.$cookie.set('token', resp.token, 1)
         this.loadData()
+        this.loading = false
         this.loginModal = false
       })
     },

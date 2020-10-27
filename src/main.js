@@ -7,6 +7,10 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import iView from 'view-design'
 import 'view-design/dist/styles/iview.css'
+import vuecookie from 'vue-cookie'
+import {
+  cookie
+} from './libs/common'
 
 Vue.config.productionTip = false
 
@@ -15,20 +19,28 @@ axios.defaults.transformRequest = [
     return JSON.stringify(data)
   }
 ]
+Vue.prototype.$cookie = vuecookie
 axios.defaults.responseType = 'json'
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8'
+
 // 添加request拦截器
 axios.interceptors.request.use(config => {
-  console.log(config)
+  // JWT的token
+  let token = cookie('token')
+  config.headers.common['token'] = token
   let url = config.url
   if (url.indexOf('share') === 0 || url.indexOf('base') === 0) { // share开头的接口都走api对应的服务
     config.url = `api/${url}`
   }
   return config
 })
+let vm = null
 // 添加响应拦截器
 axios.interceptors.response.use(function (response) {
-  return response.data
+  if (response.data.code !== 0) {
+    vm && vm.$Message.error(response.data.msg)
+  }
+  return response.data.data
 })
 
 Vue.use(iView)
@@ -37,7 +49,7 @@ Vue.use(VueAxios, axios)
 // Vue.prototype.$axios = axios
 
 /* eslint-disable no-new */
-new Vue({
+vm = new Vue({
   el: '#app',
   router,
   components: { App },
