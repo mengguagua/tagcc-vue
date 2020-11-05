@@ -60,6 +60,7 @@ export default {
       loading: false,
       total: 0,
       pageSize: 20,
+      startPage: 1,
       formData: {
         url: '',
         urlName: ''
@@ -78,12 +79,14 @@ export default {
       this.axios.get('share/content/query').then((resp) => {
         this.total = resp.length
         this.allData = resp
-        this.contentData = resp.slice(0, this.pageSize)
+        this.changePage(this.startPage)
+        // this.contentData = resp.slice(0, this.pageSize)
       }).catch((resp) => {
         console.log(resp)
       })
     },
     changePage (index) {
+      this.startPage = index
       let start = (index - 1) * this.pageSize
       let end = index * this.pageSize
       this.contentData = this.allData.slice(start, end)
