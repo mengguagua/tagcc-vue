@@ -41,7 +41,12 @@ axios.interceptors.response.use(function (response) {
     vm && vm.$Message.error(response.data.msg)
   }
   return response.data.data
+},error => {
+  if (error.response.data.status === 500 && error.response.data.message != 401) {
+    vm && vm.$Message.error(error.response.data.message)
+  }
 })
+
 
 Vue.use(iView)
 

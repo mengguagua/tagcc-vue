@@ -1,7 +1,10 @@
 <template lang="pug">
   div(style="padding: 48px 120px")
     div.position
-      Button(@click="loginShow") 登录
+      Button(v-if="token") {{nickname}}
+      span &nbsp;&nbsp;
+      Button(v-if="token" @click="loginOut") 退出
+      Button(v-else @click="loginShow") 登录
     div
       Button.button(icon="md-sync" @click="loadData") Refresh
       span &nbsp;&nbsp;
@@ -15,9 +18,9 @@
             span.list-title {{ headTitle }}
           ListItem(v-for="(item,index) in contentData" :key="index" :avatar="item.icon" title="" description="") {{ item.urlName }}&nbsp;&nbsp;&nbsp;&nbsp;
             template(slot="extra")
-              Button(shape="circle" @click="goUp(item)") 置顶
+              Button(shape="circle" @click="goUp(item)") 推一把
               span &nbsp;&nbsp;
-              Button(shape="circle" icon="md-paw" @click="goUrl(item.url)")
+              Button(shape="circle" icon="md-paw" @click="goUrl(item)")
               span &nbsp;&nbsp;
               Button(shape="circle" icon="md-close" @click="remove(item)")
         Page(:total="total" size="small" :page-size="pageSize" @on-change="changePage")
@@ -42,10 +45,13 @@
 
 <script>
 import md5 from 'md5'
+import { cookie } from '../libs/common'
 export default {
   name: 'HelloWorld',
   data () {
     return {
+      token: cookie('token') || '',
+      nickname: cookie('nickname') || '',
       headTitle: '常用链接',
       allData: [],
       contentData: [],
@@ -82,8 +88,9 @@ export default {
       let end = index * this.pageSize
       this.contentData = this.allData.slice(start, end)
     },
-    goUrl (url) {
-      window.open(url)
+    goUrl (ret) {
+      this.goUp(ret);
+      window.open(ret.url)
     },
     add () {
       this.showModal = true
@@ -96,7 +103,8 @@ export default {
           newData = data[index]
         }
       })
-      newData.weight = Number(data[0].weight) + 1
+      // newData.weight = Number(data[0].weight) + 1
+      newData.weight = Number(ret.weight) + 1
       this.axios.post('share/content/one/weight/update', {
         ...newData
       }).then(() => {
@@ -106,6 +114,11 @@ export default {
     loginShow () {
       this.loginModal = true
     },
+    loginOut () {
+      this.$cookie.delete('token')
+      this.$cookie.delete('nickname')
+      location.reload();
+    },
     login () {
       this.loading = true
       Object.assign(this.loginData, {password: md5(this.loginData.password)})
@@ -113,9 +126,8 @@ export default {
         ...this.loginData
       }).then((resp) => {
         this.$cookie.set('token', resp.token, 1)
-        this.loadData()
-        this.loading = false
-        this.loginModal = false
+        this.$cookie.set('nickname', resp.user.nickname, 1)
+        location.reload();
       })
     },
     submit () {
