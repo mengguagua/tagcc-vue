@@ -9,7 +9,7 @@
       Button.button(icon="md-sync" @click="loadData") Refresh
       span &nbsp;&nbsp;
       Button.button(icon="md-add" @click="add()") Add
-      Upload(action="share/content/upload")
+      Upload(action="share/content/upload" v-if="token")
         Button(icon="ios-cloud-upload-outline") Upload files
     Row
       Col(span="12")
@@ -18,11 +18,13 @@
             span.list-title {{ headTitle }}
           ListItem(v-for="(item,index) in contentData" :key="index" :avatar="item.icon" title="" description="") {{ item.urlName }}&nbsp;&nbsp;&nbsp;&nbsp;
             template(slot="extra")
-              Button(shape="circle" @click="goUp(item)") 推一把
+              Button(shape="circle" @click="goUp(item)") 顶
+              span &nbsp;&nbsp;
+              Button(v-if="token" shape="circle" icon="ios-people" @click="share(item)") 公开
               span &nbsp;&nbsp;
               Button(shape="circle" icon="md-paw" @click="goUrl(item)")
               span &nbsp;&nbsp;
-              Button(shape="circle" icon="md-close" @click="remove(item)")
+              Button(v-if="token" shape="circle" icon="md-close" @click="remove(item)")
         Page(:total="total" size="small" :page-size="pageSize" @on-change="changePage")
       Col(span="12") &nbsp;
     Modal(v-model="showModal", title="Add" width="800")
@@ -38,7 +40,7 @@
         FormItem(label="用户名")
           Input(v-model='loginData.username', placeholder="用户名")
         FormItem(label="密码")
-          Input(v-model='loginData.password', placeholder="密码")
+          Input(v-model='loginData.password', placeholder="密码" type="password")
       template(slot="footer")
         Button(@click="login", :loading="loading"  type="primary" :disabled="loading") 确定
 </template>
@@ -114,6 +116,23 @@ export default {
         this.loadData()
       })
     },
+    share (ret) {
+      this.$Modal.confirm({
+        okText: '公开',
+        content: '<h4>tip：确定公开给游客<h4/>',
+        onOk: () => {
+          this.axios.post('share/content/tourist/add', {
+            ...ret
+          }).then(() => {
+            this.loadData()
+            this.$Message.success('success')
+          })
+        },
+        onCancel: () => {
+          this.$Message.info('Clicked cancel')
+        }
+      })
+    },
     loginShow () {
       this.loginModal = true
     },
@@ -128,9 +147,12 @@ export default {
       this.axios.post('base/login', {
         ...this.loginData
       }).then((resp) => {
-        this.$cookie.set('token', resp.token, 1)
-        this.$cookie.set('nickname', resp.user.nickname, 1)
-        location.reload();
+        this.loading = false
+        if (resp) {
+          this.$cookie.set('token', resp.token, 1)
+          this.$cookie.set('nickname', resp.user.nickname, 1)
+          location.reload();
+        }
       })
     },
     submit () {
@@ -146,7 +168,7 @@ export default {
     remove (ret) {
       this.$Modal.confirm({
         okText: '删除',
-        content: '<h4>tip：请主人再次确认<h4/>',
+        content: '<h4>tip：请再次确认<h4/>',
         onOk: () => {
           this.axios.post('share/content/one/delete', {
             id: ret.id
