@@ -4,7 +4,10 @@
       Button(v-if="token") {{nickname}}
       span &nbsp;&nbsp;
       Button(v-if="token" @click="loginOut") 退出
-      Button(v-else @click="loginShow") 登录
+      div(v-else)
+        Button( @click="loginShow") 登录
+        span &nbsp;&nbsp;
+        Button( @click="registerShow") 注册
     div
       Button.button(icon="md-sync" @click="loadData") Refresh
       span &nbsp;&nbsp;
@@ -35,14 +38,22 @@
           Input(v-model='formData.urlName', placeholder="描述")
       template(slot="footer")
         Button(@click="submit", :loading="loading"  type="primary" :disabled="loading") 确定
-    Modal(v-model="loginModal", title="Login" width="400")
+    Modal(v-model="userModal", title="Login" width="400")
       Form(:label-width='80')
-        FormItem(label="用户名")
-          Input(v-model='loginData.username', placeholder="用户名")
-        FormItem(label="密码")
-          Input(v-model='loginData.password', placeholder="密码" type="password")
+        FormItem(label="邮箱" required)
+          Input(v-model='userData.username', placeholder="邮箱")
+        FormItem(label="密码" required)
+          Input(v-model='userData.password', placeholder="密码" type="password")
+        FormItem(label="验证码" required, v-if="type === 'register'")
+          Row
+            Col(span="14")
+              Input(v-model="userData.code" type="text" placeholder="验证码", :maxlength="6")
+            Col(span="2" style="text-align: center") -
+            Col(span="8")
+              Button(v-if="time" disabled long) {{time}}s
+              Button(v-else @click="getCode" long type="primary" ghost, :disabled="loading") 获取验证码
       template(slot="footer")
-        Button(@click="login", :loading="loading"  type="primary" :disabled="loading") 确定
+        Button(@click="doHandle", :loading="loading"  type="primary" :disabled="loading") 确定
 </template>
 
 <script>
@@ -52,13 +63,15 @@ export default {
   name: 'HelloWorld',
   data () {
     return {
+      time: 0,
       token: cookie('token') || '',
       nickname: cookie('nickname') || '',
       headTitle: '常用链接',
       allData: [],
       contentData: [],
       showModal: false,
-      loginModal: false,
+      type: 'login',
+      userModal: false,
       loading: false,
       total: 0,
       pageSize: 20,
@@ -67,22 +80,45 @@ export default {
         url: '',
         urlName: ''
       },
-      loginData: {
+      userData: {
         username: '',
-        password: ''
+        password: '',
+        code: '',
       }
     }
   },
   mounted () {
     this.loadData()
   },
+  watch: {
+    time() {
+      if (this.time) {
+        setTimeout(() => {
+          this.time--;
+        }, 1000);
+      }
+    }
+  },
   methods: {
+    getCode() {
+      this.loading = true
+      !this.time &&
+      this.axios.post("share/content/email/send", {
+        to: this.userData.username,
+      }).then((resp) => {
+          this.loading = false
+          if (resp.code === 0) {
+            this.time = 60;
+            this.$Message.success('success')
+          }
+        });
+    },
     loadData () {
       this.axios.get('share/content/query').then((resp) => {
-        this.total = resp.length
-        this.allData = resp
+        this.total = resp.data.length
+        this.allData = resp.data
         this.changePage(this.startPage)
-        // this.contentData = resp.slice(0, this.pageSize)
+        // this.contentData = resp.data.slice(0, this.pageSize)
       }).catch((resp) => {
         console.log(resp)
       })
@@ -123,9 +159,11 @@ export default {
         onOk: () => {
           this.axios.post('share/content/tourist/add', {
             ...ret
-          }).then(() => {
+          }).then((resp) => {
             this.loadData()
-            this.$Message.success('success')
+            if (resp.code === 0) {
+              this.$Message.success('success')
+            }
           })
         },
         onCancel: () => {
@@ -134,26 +172,45 @@ export default {
       })
     },
     loginShow () {
-      this.loginModal = true
+      this.type = 'login'
+      this.userModal = true
+    },
+    registerShow () {
+      this.type = 'register'
+      this.userModal = true
     },
     loginOut () {
       this.$cookie.delete('token')
       this.$cookie.delete('nickname')
       location.reload();
     },
-    login () {
+    doHandle () {
       this.loading = true
-      Object.assign(this.loginData, {password: md5(this.loginData.password)})
-      this.axios.post('base/login', {
-        ...this.loginData
-      }).then((resp) => {
-        this.loading = false
-        if (resp) {
-          this.$cookie.set('token', resp.token, 1)
-          this.$cookie.set('nickname', resp.user.nickname, 1)
-          location.reload();
-        }
-      })
+      if(this.type === 'login') {
+        this.axios.post('base/login', {
+          ...this.userData,
+          password: md5(this.userData.password)
+        }).then((resp) => {
+          this.loading = false
+          if (resp.code === 0) {
+            this.$cookie.set('token', resp.data.token, 1)
+            this.$cookie.set('nickname', resp.data.user.nickname, 1)
+            location.reload();
+          }
+        })
+      } else {
+        this.axios.post('base/register', {
+          ...this.userData,
+          password: md5(this.userData.password)
+        }).then((resp) => {
+          this.loading = false
+          if (resp.code === 0) {
+            this.$Message.success('success')
+            this.userModal = false
+          }
+        })
+      }
+
     },
     submit () {
       this.loading = true
@@ -172,9 +229,11 @@ export default {
         onOk: () => {
           this.axios.post('share/content/one/delete', {
             id: ret.id
-          }).then(() => {
+          }).then((resp) => {
             this.loadData()
-            this.$Message.success('success')
+            if (resp.code === 0) {
+              this.$Message.success('success')
+            }
           })
         },
         onCancel: () => {

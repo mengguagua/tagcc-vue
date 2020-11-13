@@ -40,9 +40,9 @@ axios.interceptors.response.use(function (response) {
   if (response.data.code !== 0) {
     vm && vm.$Message.error(response.data.msg)
   }
-  return response.data.data
+  return response.data
 },error => {
-  if (error.response.data.status === 500 && error.response.data.message != 401) {
+  if (error.response.data.status === 400 || (error.response.data.status === 500 && error.response.data.message != 401)) {
     vm && vm.$Message.error(error.response.data.message)
   }
 })
