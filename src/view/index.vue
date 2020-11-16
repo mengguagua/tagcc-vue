@@ -157,7 +157,7 @@ export default {
         okText: '公开',
         content: '<h4>tip：确定公开给游客<h4/>',
         onOk: () => {
-          this.axios.post('share/content/tourist/add', {
+          this.axios.post('share/content/tourist/one/add', {
             ...ret
           }).then((resp) => {
             this.loadData()
