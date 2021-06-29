@@ -1,5 +1,5 @@
 <template lang="pug">
-  div(style="padding: 48px 120px")
+  div.top-content
     div.position
       Button(v-if="token") {{nickname}}
       span &nbsp;&nbsp;
@@ -14,8 +14,11 @@
       Button.button(icon="md-add" @click="add()") Add
       Upload(action="share/content/upload" v-if="token")
         Button(icon="ios-cloud-upload-outline") Upload files
+    div.inline-block
+      Input.width-middle(v-model='searchData.keyword', :clearable="true" placeholder="关键字")
+      Button.button(@click="loadData") Search
     Row
-      Col(span="12")
+      Col(span="24")
         List
           ListItem(avatar="" title="" description="")
             span.list-title {{ headTitle }}
@@ -29,7 +32,6 @@
               span &nbsp;&nbsp;
               Button(v-if="token" shape="circle" icon="md-close" @click="remove(item)")
         Page(:total="total" size="small" :page-size="pageSize" @on-change="changePage")
-      Col(span="12") &nbsp;
     Modal(v-model="showModal", title="Add" width="800")
       Form(:label-width='80')
         FormItem(label="URL")
@@ -80,6 +82,9 @@ export default {
         url: '',
         urlName: ''
       },
+      searchData: {
+        keyword: '',
+      },
       userData: {
         username: '',
         password: '',
@@ -114,7 +119,11 @@ export default {
         });
     },
     loadData () {
-      this.axios.get('share/content/query').then((resp) => {
+      this.axios.get('share/content/query', {
+        params: {
+          keyword: this.searchData.keyword,
+        }
+      }).then((resp) => {
         this.total = resp.data.length
         this.allData = resp.data
         this.changePage(this.startPage)
@@ -246,15 +255,53 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-  .list-title {
-    font-size: 14px;
-    font-weight: 500;
+<style lang="scss">
+@media only screen and (min-width: 769px),
+only screen and (min-device-width: 769px) {
+  .top-content {
+    padding: 48px 120px;
+    .list-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .button {
+      margin-bottom: 12px;
+    }
+    .position {
+      padding: 0px 0px 12px 0px;
+    }
+    .inline-block {
+      display: flex;
+      .width-middle {
+        width: 200px;
+        margin-right: 4px;
+      }
+    }
   }
-  .button {
-    margin-bottom: 12px;
+}
+</style>
+<style lang="scss">
+@media only screen and (max-width: 768px),
+only screen and (max-device-width: 768px) {
+  .top-content {
+    padding: 6px 12px;
+    .list-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .button {
+      margin-bottom: 12px;
+    }
+    .position {
+      padding: 0px 0px 12px 0px;
+    }
+    .inline-block {
+      display: flex;
+      .width-middle {
+        width: 200px;
+        margin-right: 4px;
+      }
+    }
   }
-  .position {
-    padding: 0px 0px 12px 0px;
-  }
+}
 </style>
